@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="format-detection" content="telephone=no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous"
+    >
+    <title>Virtual memory simulator for ECE 668 @author Xiaoyang</title>
+    <style>
+
+        :root {
+            --el-color: #e5dede;
+        }
+
+        body {
+            background-color: #151517;
+            color: var(--el-color);
+        }
+
+        .table-kun {
+            margin-top: 35px;
+            color: var(--el-color);
+        }
+
+        .err-text {
+            margin-top: 35px;
+            margin-bottom: 35px;
+        }
+
+        .us-stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /*grid-template-rows: 1fr 1fr;*/
+            align-items: center;
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        .container-half {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            align-items: center;
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        .us-stats-item {
+            margin-left: 50px;
+            margin-right: 50px;
+        }
+
+        .button1 {
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+
+
+<div class="container py-4">
+
+    <div class="p-3 mb-4 bg-dark rounded-3">
+        <h1>MIPS simulator</h1>
+        <div class="us-stats-container">
+            <div class="us-stats-item">
+                <form method="post" th:action="@{/run}" th:object="${user}" class="loginForm">
+                    <div class="loginInputDiv">
+                        <textarea  style="color: #fff; background-color: #555555; width:500px; height:300px" type="text" th:field="*{userName}" id="name" class="loginInput" placeholder="input your 32 bits instruction, end with ;"></textarea>
+                    </div>
+                    <p></p>
+                    <input type="submit" class="loginButton button1" value="Run">
+                </form>
+
+                <table class="table table-kun">
+                    <tr>
+                        <th>R0</th>
+                        <th>R1</th>
+                        <th>R2</th>
+                        <th>R3</th>
+                        <th>R4</th>
+                        <th>R5</th>
+                        <th>R6</th>
+                        <th>R7</th>
+                        <th>R8</th>
+                        <th>R9</th>
+                    </tr>
+                    <tr>
+                        <td th:text="${register0}"></td>
+                        <td th:text="${register1}"></td>
+                        <td th:text="${register2}"></td>
+                        <td th:text="${register3}"></td>
+                        <td th:text="${register4}"></td>
+                        <td th:text="${register5}"></td>
+                        <td th:text="${register6}"></td>
+                        <td th:text="${register7}"></td>
+                        <td th:text="${register8}"></td>
+                        <td th:text="${register9}"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="us-stats-item">
+                <h3>Input example</h3>
+                <p>add $1, $2, $3</p>
+                <p>add $3, $4, $5</p>
+                <p>sub $3, $4, $5</p>
+                <p>lw  $1, 8($2)</p>
+                <p>sub $1, $3, $4</p>
+                <h3>Binary code</h3>
+                <p>000000 00001 00010 00011 00000 100000;</p>
+                <p>000000 00011 00100 00101 00000 100000;</p>
+                <p>000000 00011 00100 00101 00000 100010;</p>
+                <p>100011 00010 00001 0000000000001000;</p>
+                <p>000000 00001 00011 00100 00000100010;</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 mb-4 bg-dark rounded-3">
+        <h1>TLB Infos</h1>
+        <div class="us-stats-container">
+            <div class="us-stats-item">
+                <table class="table table-kun">
+                    <tr>
+                        <th>[Page Number, Frame Number]</th>
+                    </tr>
+                    <tr th:each="tlbEntry : ${tlb}">
+                        <td th:text="${tlbEntry}"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="container-half">
+                <div>
+                    <h1 class="display-4">16</h1>
+                    <p>Max Entries Number</p>
+                </div>
+                <div>
+                    <h1 class="display-4">FIFO</h1>
+                    <p>Update Rule</p>
+                </div>
+                <div>
+                    <h1 class="display-4" th:text="${pageFaultRate}"></h1>
+                    <p>Page Fault Rate</p>
+                </div>
+                <div>
+                    <h1 class="display-4" th:text="${tlbHitRate}"></h1>
+                    <p>Tlb Hit Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 mb-4 bg-dark rounded-3">
+        <h1>Virtual address history</h1>
+        <table class="table table-kun">
+            <tr>
+                <th>VA</th>
+                <th>Page Number</th>
+                <th>Offset</th>
+                <th>PA</th>
+                <th>Data</th>
+                <th>Tlb is Hit</th>
+                <th>is in Page Table</th>
+            </tr>
+            <tr th:each="vaInfo : ${virtualMemInfos}">
+                <td th:text="${vaInfo.va}"></td>
+                <td th:text="${vaInfo.pageNumber}"></td>
+                <td th:text="${vaInfo.offset}"></td>
+                <td th:text="${vaInfo.pa}"></td>
+                <td th:text="${vaInfo.data}"></td>
+                <td th:text="${vaInfo.tlbHit}"></td>
+                <td th:text="${vaInfo.pageTableTrue}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="p-3 mb-4 bg-dark rounded-3">
+        <h1>Program Running Result</h1>
+        <div class="us-stats-container">
+                <p th:text="${runningResult}"></p>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
